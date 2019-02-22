@@ -1,6 +1,5 @@
 #---UPDATES FOR NEXT WORK TIME---
 #Collision detection
-#Fix "non-subscriptable items"
 #prepare to build landscapes
 #IF TIME - Prep enemies/attacking
 
@@ -35,6 +34,9 @@ FixVar = [0, 6]
 BUILDINGS = []
 ENEMIES = []
 LANDSCAPE_ITEMS = []
+
+#object tracking variables:
+OBJECTS = {} #keeps track of objects and their unique ids
 
 #changes landscape based upon coordinates of player object
 #if the coordinates are too far left, the player moves left on the map
@@ -115,7 +117,7 @@ def DetectCollision(object1, object2):
     avatar2 = object2.avatar
     obj1tag = object1.tag
     obj2tag = object2.tag
-    print(obj2tag)
+    #print(obj2tag)
     HOMELAND1 = object1.homeland
     HOMELAND2 = object2.homeland
     #checks to see if they both are the same homeland:
@@ -126,13 +128,32 @@ def DetectCollision(object1, object2):
         #grabs the object's position and checks to see if they overlap
         OBJ1 = WORLD.bbox(avatar1)
         OBJ2 = WORLD.bbox(avatar2)
+        #bypasses the "NONETYPE ERROR"
         if OBJ1 == None:
             print("Nonetype, not checking")
         else:
+            #grabs the overlapping objects and checks to see if OBJECT2 is in the overlap field
             overlap = WORLD.find_overlapping(OBJ1[0], OBJ1[1], OBJ1[2], OBJ1[3])
-            print(overlap)
-            if obj2tag in overlap:
+            if object2.ID in overlap:
+                print(overlap)
+                print(object2.ID)
                 return True
+
+            '''
+Recognize object ids in tuple: recognize ONE object in the tuple: Object2
+
+            '''
+            '''
+            overlapping_list = []
+            List_objects = WORLD.find_all()
+            NumberOfStartingObjects = 2
+            for k, v in OBJECTS.items():
+                if v in overlap:
+                    overlapping_list.append(y)
+            print(overlapping_list)
+            if len(overlapping_list) >= 1:
+                return True
+            '''
 
         '''
  X1,Y1 ------w
@@ -208,6 +229,7 @@ h             -
 #CANVAS PLAYER OBJECTS
 LandscapeBar = WORLD.create_rectangle(400, 0, 100, 20, fill="white")
 LandscapeName = WORLD.create_text(250, 10, text=LANDSCAPENUMS[0])
+INVISIBLEOBJECT = WORLD.create_text(0, 0, text="")
 #makes the color of the landscape based upon the landscape color codes
 WORLD.configure(bg=LANDSCAPE[LANDSCAPENUMS[0]])
 
@@ -226,7 +248,9 @@ class Player:
         self.draw(250, 250, 260, 260)
         self.walls = []
         self.tag = "player"
+        self.ID = 3
         self.photo = PhotoImage(file="Images/player/player_normal.gif")
+        OBJECTS["player"] = self
     #creating tangible, visible character
     def draw(self, x1, y1, x2, y2):
         self.avatar = WORLD.create_rectangle(x1, y1, x2, y2, fill="white", tag="player")
@@ -273,18 +297,21 @@ class Player:
         del self.avatar
         self.avatar = WORLD.create_rectangle(250, 250, 260, 260, fill="white", tag="player")
             
-#defining the basic enemy class of the game
+#defining the basic enemy class of the game------
 class Enemy:
     def __init__(self, TYPE, player, homeland):
         pass
-#builds a building object, being either garrisons, villages, player built walls,
+    
+#----builds a building object, being either garrisons, villages, player built walls,-----
 #NPC built walls, etc etc etc etc etc
 class Building:
     def __init__(self,TYPE, constructor, land):
         self.homeland = land
         self.constructor = constructor
         self.tag = "b-%d" % id(self)
-        print(self.tag)
+        OBJECTS[self.tag] = self
+        self.ID = self.DefineID()
+        print(self.ID)
         if TYPE == "wall":
             self.TYPE = 1
             self.photo = PhotoImage(file="Images/buildings/BUILDING_newwall.gif")
@@ -292,6 +319,10 @@ class Building:
         else:
             del self
     #places avatar based upon constructor vars
+    def DefineID(self):
+        IDS = WORLD.find_all()
+        SelfID = IDS[len(IDS)-1]
+        return SelfID
     def build(self, constructor):
         ccoords = WORLD.coords(constructor.avatar)
         #print(ccoords)
