@@ -134,97 +134,14 @@ def DetectCollision(object1, object2):
         else:
             #grabs the overlapping objects and checks to see if OBJECT2 is in the overlap field
             overlap = WORLD.find_overlapping(OBJ1[0], OBJ1[1], OBJ1[2], OBJ1[3])
+            print("OBJ1: " + str(object1.ID))
+            print("OBJ2: " + str(object2.ID))
+            #makes sure the first id in the tuple (object1) is not returned true
             if object2.ID in overlap:
-                print(overlap)
-                print(object2.ID)
                 return True
-
-            '''
-Recognize object ids in tuple: recognize ONE object in the tuple: Object2
-
-            '''
-            '''
-            overlapping_list = []
-            List_objects = WORLD.find_all()
-            NumberOfStartingObjects = 2
-            for k, v in OBJECTS.items():
-                if v in overlap:
-                    overlapping_list.append(y)
-            print(overlapping_list)
-            if len(overlapping_list) >= 1:
-                return True
-            '''
-
-        '''
- X1,Y1 ------w
-h             -
--             h
-  -----w-- X2, Y2
-'''
-        '''
-        X1 = OBJ1[0]
-        Y1 = OBJ1[1]
-        X2 = OBJ1[2]
-        Y2 = OBJ1[3]
-        w1 = X1 - X2
-        h1 = Y1 - Y2
-
-        x1 = OBJ2[0]
-        y1 = OBJ2[1]
-        x2 = OBJ2[2]
-        y2 = OBJ2[3]
-        w2 = x1 - x2
-        h2 = y1 - y2
-
-        #checking based upon coords set above
-        
-        if (x1+w2>=X1>=x1 and y1+h2>=Y1>=y1):
-            return True
-        if (x1+w2>=X1+w1>=x1 and y1+h2>=Y1>=y1):
-            return True
-        if (x1+w2>=X1>=x1 and y1+h2>=Y1+h1>=y1):
-            return True
-        if (x1+w2>=X1+w1>=x1 and y1+h2>=Y1+h1>=y1):
-            return True
-        else:
-            return False
-
         
 
-    #because OBJECT 1 is the object the function is called for
-    '''
-        '''
-    overlap = WORLD.find_overlapping(x1, y1, x2, y2)
-    print(overlap)
-    if len(overlap) >= 2:
-        return True
-    elif len(overlap) <= 2:
-        return False
-        '''
-    '''
-'''
-    '''
-    if (x2+w2>=x1>=x2 and y2+h2>=y1>=y2):
-        return True
-    if (x2+w2>=x1+w1>=x2 and y2+h2>=y1>=y2):
-        return True
-    if (x2+w2>=x1>=x2 and y2+h2>=y1+h1>=y2):
-        return True
-    if (x2+w2>=x1+w1>=x2 and y2+h2>=y1+h1>=y2):
-        return True
-    else:
-        return False
-    '''
-    '''
-    a = WORLD.bbox(object1)
-    b = WORLD.bbox(object2)
-    print(a)
-    print(b)
-    if b[0] in range(a[0],a[2]) or b[2] in range(a[0], a[2]) and b[1] in range(a[1], a[2]) or b[3] in range(a[1], a[3]):
-        return True
-    else:
-        return False
-    '''
+
 
 #CANVAS PLAYER OBJECTS
 LandscapeBar = WORLD.create_rectangle(400, 0, 100, 20, fill="white")
@@ -321,7 +238,7 @@ class Building:
     #places avatar based upon constructor vars
     def DefineID(self):
         IDS = WORLD.find_all()
-        SelfID = IDS[len(IDS)-1]
+        SelfID = len(IDS) + 1
         return SelfID
     def build(self, constructor):
         ccoords = WORLD.coords(constructor.avatar)
