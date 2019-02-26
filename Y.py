@@ -1,7 +1,10 @@
 #---UPDATES FOR NEXT WORK TIME---
-#Collision detection
+
 #prepare to build landscapes
 #IF TIME - Prep enemies/attacking
+#Enemies (basic) attacking (basic)
+#enemy homelands
+#VILLAGES!
 
 
 #Y.py
@@ -15,6 +18,7 @@ WORLD = Canvas(root, width=500, height=500)
 
 #Garbage Collection Prevention Lists (can be used to store other images, etc etc)
 WALL_PHOTOS = []
+VILLAGE_PHOTOS = []
 
 #WORLD VARIABLES - (lands, etc etc. Vars/functions to build maps)
 LANDSCAPE = {"The Fields": "green",
@@ -23,12 +27,18 @@ LANDSCAPE = {"The Fields": "green",
              "The BorderLands": "#B7D052",
              "High Feet of the Mountain": "#998321",
              "Crown Mountains": "#6D5C0F",
-             "Low Feet of the Mountain": "#998321"}
+             "Low Feet of the Mountain": "#998321",
+             "The Desert" : "#D7BB0A", "Snowdin": "#F9F9F9", "Tundra": "#E5E5E5",
+             "Isle Point": "#34BE83", "Islelands": "#04B62A", "Dark Desert" : "#A19303",
+             "Bloodlands" : "#7D2D2D"}
+
 LANDSCAPENUMS = ["The Fields", "The Forest", "The Shirelands",
                  "The BorderLands", "High Feet of the Mountain",
-                 "Crown Mountains", "Low Feet of the Mountain"]
+                 "Crown Mountains", "Low Feet of the Mountain",
+                 "The Desert", "Snowdin", "Tundra", "Isle Point",
+                 "Islelands", "Dark Desert", "Bloodlands"]
 LANDNUM = 0
-FixVar = [0, 6]
+FixVar = [0, len(LANDSCAPENUMS)-1]
 
 #COLLISION VARIABLES - For detecting collisions
 BUILDINGS = []
@@ -72,6 +82,7 @@ def ChangeLandscapeLEFT(player):
                 WORLD.itemconfigure(LandscapeName, text=LANDSCAPENUMS[LANDNUM])
                 del player.avatar
                 player.draw(420, 250, 430, 260)
+                player.homeland = LANDSCAPENUMS[LANDNUM]
             except:
                 FIXVAR()
 def ChangeLandscapeRIGHT(player):
@@ -94,6 +105,7 @@ def ChangeLandscapeRIGHT(player):
                 WORLD.itemconfigure(LandscapeName, text=LANDSCAPENUMS[LANDNUM])
                 del player.avatar
                 player.draw(10, 250, 20, 260)
+                player.homeland = LANDSCAPENUMS[LANDNUM]
             except:
                 #print("Index out of range")
                 FIXVAR()
@@ -112,6 +124,7 @@ def DetectCollision(object1, object2):
     h1 = object1.height
     h2 = object2.height
     '''
+    CURRENTHOMELAND = LANDSCAPENUMS[LANDNUM]
     #OBJECTIVE: finds the rectangles of the two objects and sees if they overlap
     avatar1 = object1.avatar
     avatar2 = object2.avatar
@@ -120,33 +133,37 @@ def DetectCollision(object1, object2):
     #print(obj2tag)
     HOMELAND1 = object1.homeland
     HOMELAND2 = object2.homeland
+    #print("OBJ1 : " + HOMELAND1)
+    #print("OBJ2 : " + HOMELAND2)
     #checks to see if they both are the same homeland:
     if HOMELAND1 != HOMELAND2:
         return False
-    if HOMELAND1 == HOMELAND2:
+    #Checks to see if both the homelands are the same as the current one
+    #if not....the function stops.
+    if HOMELAND1 and HOMELAND2 == CURRENTHOMELAND:
         #print("SAME")
         #grabs the object's position and checks to see if they overlap
         OBJ1 = WORLD.bbox(avatar1)
         OBJ2 = WORLD.bbox(avatar2)
         #bypasses the "NONETYPE ERROR"
         if OBJ1 == None:
-            print("Nonetype, not checking")
+            #reason for nonetype error is because the avatar does not exist at the
+            #point of calling the function. 
+            print("Nonetype, avatar does not exist")
         else:
             #grabs the overlapping objects and checks to see if OBJECT2 is in the overlap field
             overlap = WORLD.find_overlapping(OBJ1[0], OBJ1[1], OBJ1[2], OBJ1[3])
-            print("OBJ1: " + str(object1.ID))
-            print("OBJ2: " + str(object2.ID))
+            #print("OBJ1: " + str(object1.ID))
+            #print("OBJ2: " + str(object2.ID))
             #makes sure the first id in the tuple (object1) is not returned true
             if object2.ID in overlap:
                 return True
-        
-
+       
 
 
 #CANVAS PLAYER OBJECTS
 LandscapeBar = WORLD.create_rectangle(400, 0, 100, 20, fill="white")
 LandscapeName = WORLD.create_text(250, 10, text=LANDSCAPENUMS[0])
-INVISIBLEOBJECT = WORLD.create_text(0, 0, text="")
 #makes the color of the landscape based upon the landscape color codes
 WORLD.configure(bg=LANDSCAPE[LANDSCAPENUMS[0]])
 
@@ -161,13 +178,14 @@ class Player:
         self.health = health
         self.power = init_power
         self.speed = speed
-        self.homeland = "The Fields"
+        self.homeland = LANDSCAPENUMS[LANDNUM]
         self.draw(250, 250, 260, 260)
         self.walls = []
         self.tag = "player"
-        self.ID = 3
         self.photo = PhotoImage(file="Images/player/player_normal.gif")
+        #for overlapping checking:
         OBJECTS["player"] = self
+        print("PLAYER: " + str(WORLD.find_overlapping(250, 250, 260, 260)))
     #creating tangible, visible character
     def draw(self, x1, y1, x2, y2):
         self.avatar = WORLD.create_rectangle(x1, y1, x2, y2, fill="white", tag="player")
@@ -175,6 +193,8 @@ class Player:
         self.y = y1
         self.width = x2-x1
         self.height = y2-y1
+        overlap = WORLD.find_overlapping(250, 250, 260, 260)
+        self.ID = overlap[0]
         #print(self.width)
         #print(self.height)
     #allowing player to control character movement
@@ -190,6 +210,7 @@ class Player:
         #calls world functions to check for neccessary landscape change
         ChangeLandscapeLEFT(self)
         ChangeLandscapeRIGHT(self)
+        self.CHANGELAND()
         for x in range(0, len(self.walls)):
             self.walls[x].LANDCHECK()
         for x in range(0, len(BUILDINGS)):
@@ -213,32 +234,60 @@ class Player:
     def DEBUGrefresh(self):
         del self.avatar
         self.avatar = WORLD.create_rectangle(250, 250, 260, 260, fill="white", tag="player")
+    def CHANGELAND(self):
+        #changes the homeland so that the collision detection works.
+        self.homeland = LANDSCAPENUMS[LANDNUM]
             
 #defining the basic enemy class of the game------
 class Enemy:
     def __init__(self, TYPE, player, homeland):
+        self.player = player
+        self.homeland = homeland
+        self.tag = "E-%d" % id(self)
+        OBJECTS[self.tag] = self
+        self.ID = self.DefineID()
+        if TYPE == "orc":
+            self.TYPE = 1
+        else:
+            del self
+    def DefineID(self):
+        IDS = WORLD.find_all()
+        SelfID = len(IDS) + 1
+        return SelfID
+    def SPAWN(self):
         pass
+            
+        
     
 #----builds a building object, being either garrisons, villages, player built walls,-----
 #NPC built walls, etc etc etc etc etc
+#FUNCTIONS CAN BUILD:
+    #walls
 class Building:
     def __init__(self,TYPE, constructor, land):
         self.homeland = land
         self.constructor = constructor
-        self.tag = "b-%d" % id(self)
-        OBJECTS[self.tag] = self
         self.ID = self.DefineID()
-        print(self.ID)
+        #print(self.ID)
         if TYPE == "wall":
             self.TYPE = 1
-            self.photo = PhotoImage(file="Images/buildings/BUILDING_newwall.gif")
+            self.photo = PhotoImage(file="Images/buildings/walls/BUILDING_newwall.gif")
             WALL_PHOTOS.append(self.photo)
+            self.tag = "w-%d" % id(self)
+            OBJECTS[self.tag] = self
+        if TYPE == "village":
+            self.TYPE = 2
+            self.photo = PhotoImage(file="Images/buildings/villages/village_1.gif")
+            VILLAGE_PHOTOS.append(self.photo)
+            self.tag = "V-%d" % id(self)
+            OBJECTS[self.tag] = self
         else:
             del self
     #places avatar based upon constructor vars
     def DefineID(self):
         IDS = WORLD.find_all()
-        SelfID = len(IDS) + 1
+        #defines itself a unique id for checking for overlap
+        SelfID = len(IDS)+1
         return SelfID
     def build(self, constructor):
         ccoords = WORLD.coords(constructor.avatar)
@@ -252,6 +301,7 @@ class Building:
         self.avatar = WORLD.create_image(x, y, image=self.photo, tags=("building", self.tag))
         self.width = self.photo.width()
         self.height = self.photo.height()
+        print(self.homeland)
         #captures the building so we can detect collisions later
         BUILDINGS.append(self)
     #checks to see if the player is in the land that the object was built in.
@@ -267,6 +317,8 @@ class Building:
             print("BUILDING TOUCHING PLAYER")
         else:
             pass
+    def DEFINEVILLAGES(self):
+        self.VILLAGEID = "V-
                 
         
 
@@ -286,5 +338,4 @@ while True:
         WORLD.update()
     except:
         pass
-
 
