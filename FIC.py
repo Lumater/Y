@@ -15,7 +15,7 @@ if os.path.isfile(r'Y.py'):
     print("Well it looks like your all set!")
 else:
     print("Oh no! It looks like your missing Y.py!")
-    #make the computer download the missing files
+    print("Please download the missing file at: https://github.com/Lumater/Y/blob/master/Y.py")
 #--------------------------------------
 #remove, this is only for testing purposes for now
 input()
