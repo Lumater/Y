@@ -4,11 +4,12 @@
 #IF TIME - Prep enemies/attacking
 #Enemies (basic) attacking (basic)
 #enemy homelands
-#VILLAGES!
+#Can go inside villages
 
 
 #Y.py
 from tkinter import *
+import random
 
 #creating objects
 root = Tk()
@@ -19,6 +20,7 @@ WORLD = Canvas(root, width=500, height=500)
 #Garbage Collection Prevention Lists (can be used to store other images, etc etc)
 WALL_PHOTOS = []
 VILLAGE_PHOTOS = []
+ENEMYPHOTOS = []
 
 #WORLD VARIABLES - (lands, etc etc. Vars/functions to build maps)
 LANDSCAPE = {"The Fields": "green",
@@ -30,13 +32,13 @@ LANDSCAPE = {"The Fields": "green",
              "Low Feet of the Mountain": "#998321",
              "The Desert" : "#D7BB0A", "Snowdin": "#F9F9F9", "Tundra": "#E5E5E5",
              "Isle Point": "#34BE83", "Islelands": "#04B62A", "Dark Desert" : "#A19303",
-             "Bloodlands" : "#7D2D2D"}
+             "Bloodlands" : "#7D2D2D", "Fly you fools": "#788351"}
 
 LANDSCAPENUMS = ["The Fields", "The Forest", "The Shirelands",
                  "The BorderLands", "High Feet of the Mountain",
                  "Crown Mountains", "Low Feet of the Mountain",
                  "The Desert", "Snowdin", "Tundra", "Isle Point",
-                 "Islelands", "Dark Desert", "Bloodlands"]
+                 "Islelands", "Dark Desert", "Bloodlands", "Fly you fools"]
 LANDNUM = 0
 FixVar = [0, len(LANDSCAPENUMS)-1]
 
@@ -47,6 +49,11 @@ LANDSCAPE_ITEMS = []
 
 #object tracking variables:
 OBJECTS = {} #keeps track of objects and their unique ids
+
+#SPAWN VARIABLES
+EnemyNum = 1
+#number of enemy types
+Ntype = 1
 
 #changes landscape based upon coordinates of player object
 #if the coordinates are too far left, the player moves left on the map
@@ -161,6 +168,30 @@ def DetectCollision(object1, object2):
        
 
 
+#----VILLAGE FUNCTIONS----
+def SpawnVillages():
+    global player
+    #finds number of lands, picks the number of potential villages
+    #and creates villages in random spots in those lands.
+    Landnumber = len(LANDSCAPENUMS)
+    Numofvillages = random.randint(1, 16)
+    print(Numofvillages)
+    for x in range(0, Numofvillages):
+        land = random.randint(0, (Landnumber-2))
+        Hland = LANDSCAPENUMS[land]
+        print(Hland)
+        VILLAGE = Building("village", player, Hland)
+        VILLAGE.spawn()
+        VILLAGE.LANDCHECK()
+
+#----Enemy functions----
+def SpawnEnemies():
+    global EnemyNum
+    global Ntype
+    global player
+    for x in range(0, random.randint(0, EnemyNum)):
+        newenemy = Enemy(random.randint(1, Ntype), player)
+        
 #CANVAS PLAYER OBJECTS
 LandscapeBar = WORLD.create_rectangle(400, 0, 100, 20, fill="white")
 LandscapeName = WORLD.create_text(250, 10, text=LANDSCAPENUMS[0])
@@ -185,7 +216,7 @@ class Player:
         self.photo = PhotoImage(file="Images/player/player_normal.gif")
         #for overlapping checking:
         OBJECTS["player"] = self
-        print("PLAYER: " + str(WORLD.find_overlapping(250, 250, 260, 260)))
+        #print("PLAYER: " + str(WORLD.find_overlapping(250, 250, 260, 260)))
     #creating tangible, visible character
     def draw(self, x1, y1, x2, y2):
         self.avatar = WORLD.create_rectangle(x1, y1, x2, y2, fill="white", tag="player")
@@ -214,6 +245,7 @@ class Player:
         for x in range(0, len(self.walls)):
             self.walls[x].LANDCHECK()
         for x in range(0, len(BUILDINGS)):
+            BUILDINGS[x].LANDCHECK()
             if DetectCollision(self, BUILDINGS[x]):
                 print("PLAYER TOUCHING BUILDING")
             else:
@@ -240,14 +272,20 @@ class Player:
             
 #defining the basic enemy class of the game------
 class Enemy:
-    def __init__(self, TYPE, player, homeland):
+    def __init__(self, TYPE, player):
         self.player = player
-        self.homeland = homeland
+        self.homeland = "Fly you fools"
         self.tag = "E-%d" % id(self)
         OBJECTS[self.tag] = self
         self.ID = self.DefineID()
-        if TYPE == "orc":
+        Ntypes = 1
+        if TYPE == "orc" or 1:
             self.TYPE = 1
+            Photo = PhotoImage("Images/enemies/orc/orc_1.gif")
+            self.photo = Photo
+            self.attack_photo = PhotoImage("Images/enemies/orc/orc_attack.gif")
+            ENEMYPHOTOS.append(self.photo, self.attack_photo)
+            self.SPAWN()
         else:
             del self
     def DefineID(self):
@@ -255,7 +293,24 @@ class Enemy:
         SelfID = len(IDS) + 1
         return SelfID
     def SPAWN(self):
-        pass
+        self.homeland = "Fly you fools"
+        self.x = random.randint(20, 480)
+        self.y = random.randint(20, 480)
+        self.avatar = WORLD.create_image(self.x, self.y, image= self.photo, tags=("building", self.tag))
+        self.LANDCHECK()
+    def LANDCHECK(self):
+        #checks to see if the player is in the land that the object was built in.
+        if LANDSCAPENUMS[LANDNUM] != self.homeland:
+            WORLD.itemconfigure(self.avatar, state=HIDDEN)
+        if LANDSCAPENUMS[LANDNUM] == self.homeland:
+            WORLD.itemconfigure(self.avatar, state=NORMAL)
+        #print("X1, Y1, X2, Y2: " + str(self.x) + " " + str(self.y) + " " + str(self.x+20) + " " + str(self.y+20))
+        #print("PLAYER: " + str(WORLD.coords(self.constructor.avatar)))
+            
+        if DetectCollision(self, self.constructor):
+            print("BUILDING TOUCHING PLAYER")
+        else:
+            pass
             
         
     
@@ -317,13 +372,17 @@ class Building:
             print("BUILDING TOUCHING PLAYER")
         else:
             pass
-    def DEFINEVILLAGES(self):
-        self.VILLAGEID = "V-
                 
         
 
 #Defining Operating Objects
 player = Player(10, 1, 10)
+
+#WORLD-Building operations
+SpawnVillages()
+
+#ENEMY SPAWNING
+root.after(500, SpawnEnemies)
 
 WORLD.bind_all("<KeyPress-Right>", player.move)
 WORLD.bind_all("<KeyPress-Left>", player.move)
