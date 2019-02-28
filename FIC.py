@@ -10,9 +10,13 @@ import getpass
 #--------------------------------------
 computeruser = getpass.getuser()
 #--------------------------------------
+print("Checking files...")
 if os.path.isfile(r'Y.py'):
-    print("your all set!")
+    print("Well it looks like your all set!")
 else:
-    print("An Error Occured!")
+    print("Oh no! It looks like your missing Y.py!")
     #make the computer download the missing files
+#--------------------------------------
+#remove, this is only for testing purposes for now
+input()
 #--------------------------------------
